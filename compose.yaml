@@ -230,12 +230,11 @@ services:
       - ./docker/kafka/config/ssl:/etc/kafka/secrets
     restart: unless-stopped
     healthcheck:
-      test: |
-        nc -z localhost 9092 &&
-        nc -z localhost 9093 &&
-        nc -z localhost 9094 &&
-        nc -z localhost 9095 &&
-        nc -z localhost 9096 || exit 1
+      test:
+        [
+          "CMD-SHELL",
+          "kafka-broker-api-versions --bootstrap-server localhost:9092 >/dev/null 2>&1",
+        ]
       interval: 30s
       timeout: 10s
       retries: 10

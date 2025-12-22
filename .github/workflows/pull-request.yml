@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   check-format:
-    runs-on: depot-ubuntu-24.04
+    runs-on: ubuntu-24.04
     env:
       RUSTFLAGS: -D warnings
     steps:
@@ -51,7 +51,7 @@ jobs:
           taplo check
 
   run-tests:
-    runs-on: depot-ubuntu-24.04-8
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         version:

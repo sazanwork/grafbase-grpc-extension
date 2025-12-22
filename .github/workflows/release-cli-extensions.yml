@@ -66,7 +66,7 @@ jobs:
   darwin:
     needs: check-versions
     if: ${{ fromJson(needs.check-versions.outputs.matrix).include[0] }}
-    runs-on: depot-macos-latest
+    runs-on: macos-latest
     strategy:
       matrix:
         target:
@@ -112,7 +112,7 @@ jobs:
   windows:
     needs: check-versions
     if: ${{ fromJson(needs.check-versions.outputs.matrix).include[0] }}
-    runs-on: depot-windows-2022-8
+    runs-on: windows-latest
     steps:
       - name: Get sources
         uses: actions/checkout@v5
@@ -161,12 +161,12 @@ jobs:
         archs:
           [
             {
-              runner: depot-ubuntu-24.04-8,
+              runner: ubuntu-24.04,
               target: x86_64-unknown-linux-musl,
               platform: linux,
             },
             {
-              runner: depot-ubuntu-24.04-arm-8,
+              runner: ubuntu-24.04-arm,
               target: aarch64-unknown-linux-musl,
               platform: linux-arm,
             },

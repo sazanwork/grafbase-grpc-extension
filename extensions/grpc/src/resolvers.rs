@@ -6,7 +6,7 @@ use crate::{
     directives::{self, ProtoMethodDefinition},
     schema,
 };
-use grafbase_sdk::types::{Error, ResolvedField, Response, Variables};
+use grafbase_sdk::types::{Error, ResolvedField, Response, SubgraphHeaders, Variables};
 use streaming_response::StreamingResponse;
 
 pub(crate) fn grpc_method(
@@ -14,6 +14,7 @@ pub(crate) fn grpc_method(
     variables: Variables,
     schema: &schema::Schema,
     configuration: &config::GrpcConfiguration,
+    headers: SubgraphHeaders,
 ) -> Result<Response, Error> {
     let MethodInfo {
         input_message,
@@ -35,9 +36,12 @@ pub(crate) fn grpc_method(
 
     let client = grafbase_sdk::host_io::grpc::GrpcClient::new(&service.address)?;
 
-    let metadata = &[];
+    let metadata: Vec<(String, Vec<u8>)> = headers
+        .iter()
+        .map(|(name, value)| (name.to_string(), value.as_bytes().to_vec()))
+        .collect();
 
-    match client.unary(&input_proto, &service.name, &method.name, metadata, None) {
+    match client.unary(&input_proto, &service.name, &method.name, &metadata, None) {
         Ok(response) => Ok(Response::data(conversions::MessageSerialize::new(
             &response.into_message().into(),
             output_message,
@@ -56,6 +60,7 @@ pub(crate) fn grpc_method_subscription<'a>(
     variables: Variables,
     schema: &'a schema::Schema,
     configuration: &'a config::GrpcConfiguration,
+    headers: SubgraphHeaders,
 ) -> Result<StreamingResponse<'a>, Error> {
     let MethodInfo {
         input_message,
@@ -76,9 +81,12 @@ pub(crate) fn grpc_method_subscription<'a>(
 
     let client = grafbase_sdk::host_io::grpc::GrpcClient::new(&service.address)?;
 
-    let metadata = &[];
+    let metadata: Vec<(String, Vec<u8>)> = headers
+        .iter()
+        .map(|(name, value)| (name.to_string(), value.as_bytes().to_vec()))
+        .collect();
 
-    match client.streaming(&input_proto, &service.name, &method.name, metadata, None) {
+    match client.streaming(&input_proto, &service.name, &method.name, &metadata, None) {
         Ok(response) => Ok(StreamingResponse {
             response,
             output_message,

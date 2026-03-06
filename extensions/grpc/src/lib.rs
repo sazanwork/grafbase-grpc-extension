@@ -65,21 +65,21 @@ impl ResolverExtension for Grpc {
         &mut self,
         _ctx: &AuthorizedOperationContext,
         prepared: &[u8],
-        _headers: SubgraphHeaders,
+        headers: SubgraphHeaders,
         variables: Variables,
     ) -> Result<Response, Error> {
         let field = ResolvedField::try_from(prepared)?;
-        resolvers::grpc_method(field, variables, &self.schema, &self.configuration)
+        resolvers::grpc_method(field, variables, &self.schema, &self.configuration, headers)
     }
 
     fn resolve_subscription<'s>(
         &'s mut self,
         _ctx: &'s AuthorizedOperationContext,
         prepared: &'s [u8],
-        _headers: SubgraphHeaders,
+        headers: SubgraphHeaders,
         variables: Variables,
     ) -> Result<impl IntoSubscription<'s>, Error> {
         let field = ResolvedField::try_from(prepared)?;
-        resolvers::grpc_method_subscription(field, variables, &self.schema, &self.configuration)
+        resolvers::grpc_method_subscription(field, variables, &self.schema, &self.configuration, headers)
     }
 }

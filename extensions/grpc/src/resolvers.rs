@@ -36,10 +36,7 @@ pub(crate) fn grpc_method(
 
     let client = grafbase_sdk::host_io::grpc::GrpcClient::new(&service.address)?;
 
-    let metadata: Vec<(String, Vec<u8>)> = headers
-        .iter()
-        .map(|(name, value)| (name.to_string(), value.as_bytes().to_vec()))
-        .collect();
+    let metadata = to_grpc_metadata(&headers);
 
     match client.unary(&input_proto, &service.name, &method.name, &metadata, None) {
         Ok(response) => Ok(Response::data(conversions::MessageSerialize::new(
@@ -81,10 +78,7 @@ pub(crate) fn grpc_method_subscription<'a>(
 
     let client = grafbase_sdk::host_io::grpc::GrpcClient::new(&service.address)?;
 
-    let metadata: Vec<(String, Vec<u8>)> = headers
-        .iter()
-        .map(|(name, value)| (name.to_string(), value.as_bytes().to_vec()))
-        .collect();
+    let metadata = to_grpc_metadata(&headers);
 
     match client.streaming(&input_proto, &service.name, &method.name, &metadata, None) {
         Ok(response) => Ok(StreamingResponse {
@@ -94,6 +88,22 @@ pub(crate) fn grpc_method_subscription<'a>(
         }),
         Err(_) => todo!(),
     }
+}
+
+/// Filters SubgraphHeaders to only include valid gRPC metadata keys.
+/// gRPC metadata keys must be ASCII lowercase [a-z0-9_.-] and must not
+/// start with ":" (HTTP/2 pseudo-headers) or "grpc-" (reserved).
+fn to_grpc_metadata(headers: &SubgraphHeaders) -> Vec<(String, Vec<u8>)> {
+    headers
+        .iter()
+        .filter(|(name, _)| {
+            let name = name.as_str();
+            !name.starts_with(':')
+                && !name.starts_with("grpc-")
+                && name.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_' || b == b'-' || b == b'.')
+        })
+        .map(|(name, value)| (name.to_string(), value.as_bytes().to_vec()))
+        .collect()
 }
 
 struct MethodInfo<'a> {

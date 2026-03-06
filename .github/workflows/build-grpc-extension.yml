@@ -7,6 +7,9 @@ on:
       - 'extensions/grpc/**'
       - '.github/workflows/build-grpc-extension.yml'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest

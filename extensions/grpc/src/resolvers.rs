@@ -90,19 +90,20 @@ pub(crate) fn grpc_method_subscription<'a>(
     }
 }
 
-/// Filters SubgraphHeaders to only include valid gRPC metadata keys.
-/// gRPC metadata keys must be ASCII lowercase [a-z0-9_.-] and must not
-/// start with ":" (HTTP/2 pseudo-headers) or "grpc-" (reserved).
+/// Converts SubgraphHeaders to gRPC metadata.
+/// Appends `-bin` suffix to each key because the Grafbase gateway host uses
+/// `insert_bin()` (binary metadata) for all entries. Keys without `-bin` would
+/// cause an `InvalidMetadataKey` panic in the gateway's tonic gRPC client.
 fn to_grpc_metadata(headers: &SubgraphHeaders) -> Vec<(String, Vec<u8>)> {
     headers
         .iter()
-        .filter(|(name, _)| {
-            let name = name.as_str();
-            !name.starts_with(':')
-                && !name.starts_with("grpc-")
-                && name.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_' || b == b'-' || b == b'.')
+        .map(|(name, value)| {
+            let mut key = name.as_str().to_owned();
+            if !key.ends_with("-bin") {
+                key.push_str("-bin");
+            }
+            (key, value.as_bytes().to_vec())
         })
-        .map(|(name, value)| (name.to_string(), value.as_bytes().to_vec()))
         .collect()
 }
 
